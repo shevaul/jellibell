@@ -17,26 +17,28 @@ public class M_UserDevicesEtag {
 	private static final String USERDEVICESETAG_TABLE_NAME = System.getenv("USER_DEVICES_ETAG_TABLE_NAME");
 	
 	private static DynamoDBAdapter db_adapter;
-    private final AmazonDynamoDB client;
-    private final DynamoDBMapper mapper;
+    private static AmazonDynamoDB client;
+    private static DynamoDBMapper mapper;
     
-    private Logger logger = Logger.getLogger(this.getClass());
+    private static Logger logger = Logger.getLogger(M_UserDevicesEtag.class);
     
-    @SuppressWarnings("static-access")
-    public M_UserDevicesEtag() {
+    static {
     	DynamoDBMapperConfig mapperConfig = DynamoDBMapperConfig.builder()
-                .withTableNameOverride(new DynamoDBMapperConfig.TableNameOverride(USERDEVICESETAG_TABLE_NAME))
-                .build();
-            // get the db adapter
-            this.db_adapter = DynamoDBAdapter.getInstance();
-            this.client = this.db_adapter.getDbClient();
-            // create the mapper with config
-            this.mapper = this.db_adapter.createDbMapper(mapperConfig);
+    			.withTableNameOverride(new DynamoDBMapperConfig.TableNameOverride(USERDEVICESETAG_TABLE_NAME))
+    			.build();
+    	// get the db adapter
+    	db_adapter = DynamoDBAdapter.getInstance();
+    	client = db_adapter.getDbClient();
+    	// create the mapper with config
+    	mapper = db_adapter.createDbMapper(mapperConfig);
+    }
+    
+    public M_UserDevicesEtag() {
     }
     
     // methods
     public Boolean ifTableExists() {
-        return this.client.describeTable(USERDEVICESETAG_TABLE_NAME).getTable().getTableStatus().equals("ACTIVE");
+        return client.describeTable(USERDEVICESETAG_TABLE_NAME).getTable().getTableStatus().equals("ACTIVE");
     }
     
     private String userId;
@@ -60,8 +62,14 @@ public class M_UserDevicesEtag {
     	return this;
     }
     
+    
     public void update() throws IOException {
    	 logger.info("User - addRegisterDevice(): " + this.toString());
-   	 this.mapper.save(this);
+   	 mapper.save(this);
     }
+
+	@Override
+	public String toString() {
+		return "M_UserDevicesEtag [userId=" + userId + ", etag=" + etag + "]";
+	}
 }

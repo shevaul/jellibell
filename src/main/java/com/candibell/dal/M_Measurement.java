@@ -1,5 +1,7 @@
 package com.candibell.dal;
 
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -22,26 +24,28 @@ public class M_Measurement {
     private static final String SESSION_PASTSEC_DELIMITER = "#";
     
     private static DynamoDBAdapter db_adapter;
-    private final AmazonDynamoDB client;
-    private final DynamoDBMapper mapper;
+    private static AmazonDynamoDB client;
+    private static DynamoDBMapper mapper;
     
-    private Logger logger = Logger.getLogger(this.getClass());
+    private static Logger logger = Logger.getLogger(M_Measurement.class);
     
-    @SuppressWarnings("static-access")
-    public M_Measurement() {
+    static {
     	DynamoDBMapperConfig mapperConfig = DynamoDBMapperConfig.builder()
-                .withTableNameOverride(new DynamoDBMapperConfig.TableNameOverride(MEASUREMENTS_TABLE_NAME))
-                .build();
-            // get the db adapter
-            this.db_adapter = DynamoDBAdapter.getInstance();
-            this.client = this.db_adapter.getDbClient();
-            // create the mapper with config
-            this.mapper = this.db_adapter.createDbMapper(mapperConfig);
+    			.withTableNameOverride(new DynamoDBMapperConfig.TableNameOverride(MEASUREMENTS_TABLE_NAME))
+    			.build();
+    	// get the db adapter
+    	db_adapter = DynamoDBAdapter.getInstance();
+    	client = db_adapter.getDbClient();
+    	// create the mapper with config
+    	mapper = db_adapter.createDbMapper(mapperConfig);
+    }
+    
+    public M_Measurement() {
     }
     
     // methods
     public Boolean ifTableExists() {
-        return this.client.describeTable(MEASUREMENTS_TABLE_NAME).getTable().getTableStatus().equals("ACTIVE");
+        return client.describeTable(MEASUREMENTS_TABLE_NAME).getTable().getTableStatus().equals("ACTIVE");
     }
     
     private static String genDeviceUserId(String deviceId, String userId) {
@@ -54,10 +58,11 @@ public class M_Measurement {
     
     private String deviceIdUserId;
     private String id; 
+    private String category;
     private Integer temperature;
-    private String humidity;
-    private String lightLevel;
-    private String motionCounts;
+    private Integer humidity;
+    private Integer lightLevel;
+    private Integer motionCounts;
     private String rawdata;
     private String createdTime;
     private String lastUpdatedTime;
@@ -86,6 +91,15 @@ public class M_Measurement {
     	return this;
     }
     
+    @DynamoDBAttribute(attributeName = "category")
+    public String getCategory() {
+    	return this.category;
+    }
+    public M_Measurement setCategory(String category) {
+    	this.category = category;
+    	return this;
+    }
+    
     @DynamoDBAttribute(attributeName = "temperature")
     public Integer getTemperature() {
     	return this.temperature;
@@ -96,28 +110,28 @@ public class M_Measurement {
     }
     
     @DynamoDBAttribute(attributeName = "humidity")
-    public String getHumidity() {
+    public Integer getHumidity() {
     	return this.humidity;
     }
-    public M_Measurement setHumidity(String humidity) {
+    public M_Measurement setHumidity(Integer humidity) {
     	this.humidity = humidity;
     	return this;
     }
     
     @DynamoDBAttribute(attributeName = "lightLevel")
-    public String getLightLevel() {
-    	return this.humidity;
+    public Integer getLightLevel() {
+    	return this.lightLevel;
     }
-    public M_Measurement setLightLevel(String lightLevel) {
+    public M_Measurement setLightLevel(Integer lightLevel) {
     	this.lightLevel = lightLevel;
     	return this;
     }
     
     @DynamoDBAttribute(attributeName = "motionCounts")
-    public String getMotionCounts() {
+    public Integer getMotionCounts() {
     	return this.motionCounts;
     }
-    public M_Measurement setMotionCounts(String motionCounts) {
+    public M_Measurement setMotionCounts(Integer motionCounts) {
     	this.motionCounts = motionCounts;
     	return this;
     }
@@ -158,9 +172,15 @@ public class M_Measurement {
 
 	@Override
 	public String toString() {
-		return "M_Measurement [deviceIdUserId="
-				+ deviceIdUserId + ", id=" + id + ", temperature=" + temperature + ", humidity=" + humidity
-				+ ", lightLevel=" + lightLevel + ", motionCounts=" + motionCounts + ", rawdata=" + rawdata
-				+ ", createdTime=" + createdTime + ", lastUpdatedTime=" + lastUpdatedTime + "]";
+		return "M_Measurement [deviceIdUserId=" + deviceIdUserId + ", id=" + id + ", category=" + category
+				+ ", temperature=" + temperature + ", humidity=" + humidity + ", lightLevel=" + lightLevel
+				+ ", motionCounts=" + motionCounts + ", rawdata=" + rawdata + ", createdTime=" + createdTime
+				+ ", lastUpdatedTime=" + lastUpdatedTime + "]";
 	}
+	
+	public static void batchSave(List<M_Measurement> mMeasurements) {
+		mapper.batchSave(mMeasurements);
+		logger.info("Save " + mMeasurements.size() + "records to Measurement Table");
+	}
+
 }

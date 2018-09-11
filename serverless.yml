@@ -23,7 +23,10 @@ plugins:
 custom:
   devicesTableName: 'java-devices-${self:provider.stage}'
   userDevicesEtagTableName: 'java-userDevicesEtag-${self:provider.stage}'
+  userCustomProfileTableName: 'java-userCustomProfile-${self:provider.stage}'
   measurementsTableName: 'java-measurements-${self:provider.stage}'
+  liveSessionsTableName: 'java-liveSessions-${self:provider.stage}'
+  pastSessionsTableName: 'java-historySessions-${self:provider.stage}'
   customDomain:
     domainName: api.jellibell.com
     basePath: ''
@@ -48,6 +51,19 @@ provider:
       Resource:
         - { "Fn::GetAtt": ["DevicesDynamoDBTable","Arn" ] }
         - { "Fn::GetAtt": ["UserDevicesEtagDynamoDBTable","Arn" ] }
+        - { "Fn::GetAtt": ["UserCustomProfileDynamoDBTable","Arn" ] }
+        - { "Fn::GetAtt": ["LiveSessionsDynamoDBTable","Arn" ] }
+        - { "Fn::GetAtt": ["PastSessionsDynamoDBTable","Arn" ] }
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+      Resource:
         - { "Fn::GetAtt": ["MeasurementsDynamoDBTable","Arn" ] }
     - Effect: Allow
       Action:
@@ -62,7 +78,10 @@ provider:
   environment:
     DEVICES_TABLE_NAME: ${self:custom.devicesTableName}
     USER_DEVICES_ETAG_TABLE_NAME: ${self:custom.userDevicesEtagTableName}
+    USER_CUSTOM_PROFILE_TABLE_NAME: ${self:custom.userCustomProfileTableName}
     MEASUREMENTS_TABLE_NAME: ${self:custom.measurementsTableName}
+    LIVE_SESSIONS_TABLE_NAME: ${self:custom.liveSessionsTableName}
+    PAST_SESSIONS_TABLE_NAME: ${self:custom.pastSessionsTableName}
 
 # MQTT_ACCESS_KEY_ID:AKIAIFUSXWZDUCDXBJYQ
 # MQTT_ACCESS_KEY_SECRET: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
@@ -111,11 +130,61 @@ functions:
 #          authorizer:
 #          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
 
+  addCustomProfile:
+    handler: com.candibell.AddCustomProfileHandler
+    events:
+      - http:
+          path: /custom/profiles
+          method: post
+#          cors: true
+#          authorizer:
+#          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
+
+  updateCustomProfile:
+    handler: com.candibell.UpdateCustomProfileHandler
+    events:
+      - http:
+          path: /custom/profiles
+          method: patch
+#          cors: true
+#          authorizer:
+#          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
+
+  deleteCustomProfile:
+    handler: com.candibell.DeleteCustomProfileHandler
+    events:
+      - http:
+          path: /custom/profiles
+          method: delete
+#          cors: true
+#          authorizer:
+#          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
+  
+  getCustomProfiles:
+    handler: com.candibell.GetCustomProfilesByUserIdHandler
+    events:
+      - http:
+          path: /custom/profile/user/{userid}
+          method: get
+#          cors: true
+#          authorizer:
+#          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
+
+  getDefaultProfiles:
+    handler: com.candibell.GetDefaultProfilesHandler
+    events:
+      - http:
+          path: /default/profiles
+          method: get
+#          cors: true
+#          authorizer:
+#          arn: "arn:aws:cognito-idp:us-east-1:714736597349:userpool/us-east-1_4aTp3bdSh"
+
   reportSensorMeasurements:
     handler: com.candibell.ReportSensorMeasurementsHandler
     events:
       - http:
-          path: /sensor/{id}/measurements
+          path: /sensor/measurements
           method: post
 #          cors: true
 #          authorizer:
@@ -179,6 +248,23 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
+    UserCustomProfileDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.userCustomProfileTableName}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: category
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: category
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5      
     MeasurementsDynamoDBTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -196,6 +282,40 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 20
+    LiveSessionsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.liveSessionsTableName}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: deviceId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: deviceId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 20
+          WriteCapacityUnits: 20 
+    PastSessionsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.pastSessionsTableName}
+        AttributeDefinitions:
+          - AttributeName: deviceId#userId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: deviceId#userId
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 5    
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events

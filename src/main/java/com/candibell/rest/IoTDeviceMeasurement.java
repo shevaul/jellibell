@@ -2,10 +2,13 @@ package com.candibell.rest;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, creatorVisibility = JsonAutoDetect.Visibility.NONE, getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_DEFAULT)
 public final class IoTDeviceMeasurement {
 	
 	@JsonProperty("userId")
@@ -13,6 +16,9 @@ public final class IoTDeviceMeasurement {
 	
 	@JsonProperty("deviceId")
 	private String deviceId;
+	
+	@JsonProperty("category")
+	private String category;
 	
 	@JsonProperty("sessionId")
 	private String sessionId;
@@ -28,6 +34,9 @@ public final class IoTDeviceMeasurement {
 	
 	@JsonProperty("lightLevel")
 	private Integer lightLevel;
+	
+	@JsonProperty("rawData")
+	private String rawData;
 	
 	@JsonProperty("motionCounts")
 	private Integer motionCounts;
@@ -49,6 +58,14 @@ public final class IoTDeviceMeasurement {
 
 	public void setDeviceId(String deviceId) {
 		this.deviceId = deviceId;
+	}
+	
+	public String getCategory() {
+		return category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
 	}
 
 	public String getSessionId() {
@@ -98,6 +115,14 @@ public final class IoTDeviceMeasurement {
 	public void setMotionCounts(Integer motionCounts) {
 		this.motionCounts = motionCounts;
 	}
+	
+	public String getRawData() {
+		return rawData;
+	}
+
+	public void setRawData(String rawData) {
+		this.rawData = rawData;
+	}
 
 	public String getLastUpdatedTime() {
 		return lastUpdatedTime;
@@ -105,6 +130,14 @@ public final class IoTDeviceMeasurement {
 
 	public void setLastUpdatedTime(String lastUpdatedTime) {
 		this.lastUpdatedTime = lastUpdatedTime;
+	}
+
+	@Override
+	public String toString() {
+		return "IoTDeviceMeasurement [userId=" + userId + ", deviceId=" + deviceId + ", category=" + category
+				+ ", sessionId=" + sessionId + ", inSessionTime=" + inSessionTime + ", temperature=" + temperature
+				+ ", humidity=" + humidity + ", lightLevel=" + lightLevel + ", rawData=" + rawData + ", motionCounts="
+				+ motionCounts + ", lastUpdatedTime=" + lastUpdatedTime + "]";
 	}
 
 }

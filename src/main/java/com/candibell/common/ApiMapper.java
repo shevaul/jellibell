@@ -1,7 +1,19 @@
 package com.candibell.common;
 
+import java.io.IOException;
+
 import com.candibell.dal.M_Device;
+import com.candibell.dal.M_Measurement;
+import com.candibell.dal.M_UserCustomProfile;
+import com.candibell.product.profile.TimeOnlyModel;
+import com.candibell.product.profile.TrackingProfile;
+import com.candibell.product.profile.UserAlert;
 import com.candibell.rest.IoTDevice;
+import com.candibell.rest.IoTDeviceMeasurement;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class ApiMapper {
 	
@@ -47,6 +59,49 @@ public final class ApiMapper {
 		return ioTDevice;
 	}
 
+	public static M_Measurement IoTDeviceMeasurement2M_Measurement(IoTDeviceMeasurement measurement) {
+		M_Measurement mMeasurement = new M_Measurement();
+		mMeasurement.setDeviceIdUserId(measurement.getDeviceId(), measurement.getUserId());
+		mMeasurement.setCategory(measurement.getCategory());
+		mMeasurement.setId(measurement.getSessionId(), measurement.getInSessionTime());
+		mMeasurement.setTemperature(measurement.getTemperature());
+		mMeasurement.setHumidity(measurement.getHumidity());
+		mMeasurement.setLightLevel(measurement.getLightLevel());
+		mMeasurement.setMotionCounts(measurement.getMotionCounts());
+		mMeasurement.setRawdata(measurement.getRawData());
+		
+		return mMeasurement;
+	}
+	
+	public static M_UserCustomProfile TrackingProfile2M_UserCustomProfile(TrackingProfile trackingProfile) throws JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		M_UserCustomProfile mUserCustomProfile = new M_UserCustomProfile();
+		mUserCustomProfile.setUserId(trackingProfile.getCustomizedUser());
+		mUserCustomProfile.setCategory(trackingProfile.getProductCategory());
+		mUserCustomProfile.setCustomName(trackingProfile.getProfileName());
+		mUserCustomProfile.setTimeOnlyModel(mapper.writeValueAsString(trackingProfile.getTimeOnlyModel()));
+		mUserCustomProfile.setUserAlert(mapper.writeValueAsString(trackingProfile.getUserAlert()));
+		
+		return mUserCustomProfile;
+	}
+	
+	public static TrackingProfile M_UserCustomProfile2TrackingProfile(M_UserCustomProfile mUserCustomProfile) throws JsonParseException, JsonMappingException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		TrackingProfile trackingProfile = new TrackingProfile();
+		trackingProfile.setCustomizedUser(mUserCustomProfile.getUserId());
+		trackingProfile.setProductCategory(mUserCustomProfile.getCategory());
+		trackingProfile.setProfileName(mUserCustomProfile.getCustomName());
+		if (mUserCustomProfile.getTimeOnlyModel() != null && !mUserCustomProfile.getTimeOnlyModel().isEmpty()) {
+			trackingProfile.setTimeOnlyModel(mapper.readValue(mUserCustomProfile.getTimeOnlyModel(), TimeOnlyModel.class));
+		}
+		if (mUserCustomProfile.getUserAlert() != null && !mUserCustomProfile.getUserAlert().isEmpty()) {
+			trackingProfile.setUserAlert(mapper.readValue(mUserCustomProfile.getUserAlert(), UserAlert.class));
+		}
+		trackingProfile.setLastUpdatedTime(mUserCustomProfile.getLastUpdatedTime());
+		
+		return trackingProfile;
+	}
+	
 	
 	public static void main(String[] args) {
 	}
