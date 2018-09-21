@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+HOST=https://api.jellibell.com
+
+function registerDevice {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X POST "$HOST/devices" \
+    -d '{"deviceId":"DA74AC4193BB","userId":"niusidi@gmail.com","deviceType":"SENSOR","deviceName":"SidiSensor2"}'
+}
+
+function addUserCustomProfile {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X POST "$HOST/custom/profiles" \
+    -d '{"productCategory":"0004","customizedUser":"sidiniu@gmail.com","profileName":"Test2","timeOnlyModel":{"trackingPeriodInSeconds":259200}}'
+}
+
+function updateUserCustomProfile {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X PATCH "$HOST/custom/profiles" \
+    -d '{"productCategory":"0002","customizedUser":"sidiniu@gmail.com","profileName":"Test2fff","timeOnlyModel":{"trackingPeriodInSeconds":432000}}'
+}
+
+function deleteUserCustomProfile {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X DELETE "$HOST/custom/profiles" \
+    -d '{"productCategory":"0002","customizedUser":"sidiniu@gmail.com"}'
+}
+
+function getUserCustomProfiles {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X GET "$HOST/custom/profile/user/sidiniu%40gmail.com" 
+}
+
+function getDefaultProfiles {
+    curl -i \
+    -H "Content-Type:application/json" \
+    -X GET "$HOST/default/profiles" 
+}
+
+function health {
+    curl -i "$HOST/health"
+}
+
+function print_usage {
+    echo "print_usage: Not Defined"
+}
+
+case $1 in
+    h | health)
+        health
+    ;;
+    rd|registerDevice)
+        registerDevice
+    ;;
+    aup|addUserCustomProfile)
+        addUserCustomProfile
+    ;;
+    uup|updateUserCustomProfile)
+        updateUserCustomProfile
+    ;;
+    dup|deleteUserCustomProfile)
+        deleteUserCustomProfile
+    ;;
+    gup|getUserCustomProfiles)
+        getUserCustomProfiles
+    ;;
+    gdp|getDefaultProfiles)
+        getDefaultProfiles
+    ;;
+    *)
+        print_usage
+    ;;
+esac
