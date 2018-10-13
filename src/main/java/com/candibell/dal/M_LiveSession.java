@@ -91,7 +91,7 @@ public class M_LiveSession {
     	return this;
     }
     
-    @DynamoDBAttribute(attributeName = "category")
+    @DynamoDBAttribute(attributeName = "startTimestamp")
     public Long getStartTimeInSeconds() {
     	return this.startTimestamp;
     }
@@ -155,10 +155,6 @@ public class M_LiveSession {
     	return this;
     }
 
-    
-    
-    
-    
     
 	@Override
 	public String toString() {
